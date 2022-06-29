@@ -6,9 +6,9 @@ const router = new Router();
 //Bcrypt library
 const bcryptjs = require("bcryptjs");
 const saltRounds = 10;
-
+const { isLoggedIn, isLoggedOut } = require('../middleware/route-guard.js');
 // GET route ==> to display the signup form to users
-router.get('/signup', (req, res) => res.render('auth/signup'));
+router.get('/signup', isLoggedOut, (req, res) => res.render('auth/signup'));
 
 // GET route ==> to display the login form to users
 router.get('/login', (req, res) => res.render('auth/login'));
@@ -83,6 +83,7 @@ router.post('/login', (req, res, next) => {
    
     User.findOne({ email })
       .then(user => {
+          console.log("hola", user);
         if (!user) {
           res.render('auth/login', { errorMessage: 'Email is not registered. Try with other email.' });
           return;
@@ -104,8 +105,9 @@ router.post('/logout', (req, res, next) => {
     });
 });
 
-  router.get('/userProfile', (req, res) => {
+router.get('/userProfile', isLoggedIn, (req, res) => {
     res.render('users/user-profile', { userInSession: req.session.currentUser });
-  });
+});
+
 
 module.exports = router;
