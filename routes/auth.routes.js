@@ -1,5 +1,5 @@
 // routes/auth.routes.js
-
+const mongoose = require('mongoose');
 const { Router } = require('express');
 const router = new Router();
 
@@ -18,6 +18,11 @@ router.post('/signup', (req, res, next) => {
 
     const { username, email, password } = req.body;
  
+    if (!username || !email || !password) {
+        res.render('auth/signup', { errorMessage: 'All fields are mandatory. Please provide your username, email and password.' });
+        return;
+    }
+
     bcryptjs
       .genSalt(saltRounds)
       .then(salt => bcryptjs.hash(password, salt))
@@ -36,7 +41,17 @@ router.post('/signup', (req, res, next) => {
       .then(userFromDB => {
         console.log('Newly created user is: ', userFromDB);
       })
-      .catch(error => next(error));
+      .then(userFromDB => {
+        // console.log('Newly created user is: ', userFromDB);
+        res.redirect('/userProfile');
+      })
+      .catch(error => {
+        if (error instanceof mongoose.Error.ValidationError) {
+            res.status(500).render('auth/signup', { errorMessage: error.message });
+        } else {
+            next(error);
+        }
+      });
 });
 
 router.get('/userProfile', (req, res) => res.render('users/user-profile'));
